@@ -1,8 +1,8 @@
 # imports
-from TaxiFareModel.encoders import DistanceTransformer, TimeFeaturesEncoder
-from TaxiFareModel.utils import compute_rmse
-from TaxiFareModel.data import get_data, clean_data
-from TaxiFareModel.gcp_params import BUCKET_NAME, GCP_MODEL_PATH
+from TaxiFareModelCorrection.encoders import DistanceTransformer, TimeFeaturesEncoder
+from TaxiFareModelCorrection.utils import compute_rmse
+from TaxiFareModelCorrection.data import get_data, clean_data
+from TaxiFareModelCorrection.params import BUCKET_NAME, GCP_MODEL_PATH
 
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
@@ -49,6 +49,7 @@ class Trainer():
         """set and train the pipeline"""
         self.set_pipeline()
         self.pipeline.fit(self.X, self.y)
+        return self.pipeline
 
     def evaluate(self, X_test, y_test):
         """evaluates the pipeline on df_test and return the RMSE"""
@@ -84,10 +85,13 @@ if __name__ == "__main__":
     nrows = 1_000
     df = get_data(nrows=nrows)
     df = clean_data(df)
-
+    print(df.columns)
     X = df.drop('fare_amount', axis=1)
     y = df['fare_amount']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     trainer = Trainer(X_train, y_train)
     reg = trainer.run()
     trainer.save_model(reg)
+    print(trainer.evaluate(X_test, y_test))
+
+

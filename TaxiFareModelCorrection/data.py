@@ -1,12 +1,12 @@
 import pandas as pd
 from google.cloud import storage
-from TaxiFareModel.gcp_params import BUCKET_NAME, BUCKET_TRAIN_DATA_PATH
+from TaxiFareModelCorrection.params import BUCKET_NAME, BUCKET_TRAIN_DATA_PATH
 
 
 def get_data(nrows=10_000):
     '''returns a DataFrame with nrows from s3 bucket'''
     client = storage.Client()
-    df = pd.read_csv(f"gs://{BUCKET_NAME}/{BUCKET_TRAIN_DATA_PATH}", nrows=nrows)
+    df = pd.read_csv(f"gs://{BUCKET_NAME}/{BUCKET_TRAIN_DATA_PATH}", nrows=nrows, index_col=0)
     #df = pd.read_csv(AWS_BUCKET_PATH, nrows=nrows)
     return df
 
