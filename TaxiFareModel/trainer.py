@@ -2,14 +2,23 @@
 from TaxiFareModel.encoders import DistanceTransformer, TimeFeaturesEncoder
 from TaxiFareModel.utils import compute_rmse
 from TaxiFareModel.data import get_data, clean_data
+from TaxiFareModel.gcp_params import BUCKET_NAME, GCP_MODEL_PATH
+
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import RobustScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 
+# import datetime
+# import os
+# import numpy as np
+from google.cloud import storage
+import joblib
+
 
 class Trainer():
+
     def __init__(self, X, y):
         """
             X: pandas DataFrame
@@ -45,15 +54,40 @@ class Trainer():
         """evaluates the pipeline on df_test and return the RMSE"""
         y_pred = self.pipeline.predict(X_test)
         rmse = compute_rmse(y_pred, y_test)
+
         return rmse
+
+    # def train(self):
+    #     self.run()
+    #     rmse = self.evaluate(X_test, y_test)
+    #     print(rmse)
+
+    def save_model(self, reg):
+        """method that saves the model into a .joblib file and uploads it on Google Storage /models folder
+        HINTS : use joblib library and google-cloud-storage"""
+
+        # saving the trained model to disk is mandatory to then beeing able to upload it to storage
+        filepath = 'model.joblib'
+        joblib.dump(reg, filepath)
+        print("saved model.joblib locally")
+
+        client = storage.Client()
+        bucket = client.get_bucket(BUCKET_NAME)
+        # Then do other things...
+        blob = bucket.blob(GCP_MODEL_PATH)
+        blob.upload_from_filename(filename=filepath)
+
+        print(f"uploaded model.joblib to gcp cloud storage under \n => {filepath}")
 
 
 if __name__ == "__main__":
-    df = get_data()
+    nrows = 1_000
+    df = get_data(nrows=nrows)
     df = clean_data(df)
+
     X = df.drop('fare_amount', axis=1)
     y = df['fare_amount']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     trainer = Trainer(X_train, y_train)
-    trainer.run()
-    print(trainer.evaluate(X_test, y_test))
+    reg = trainer.run()
+    trainer.save_model(reg)
