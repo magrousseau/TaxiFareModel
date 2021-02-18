@@ -28,3 +28,5 @@ joblib
 memoized-property
 termcolor
 
+fastapi
+uvicorn

@@ -40,4 +40,4 @@ def predict_fare(pickup_datetime,
     model = load('model.joblib')
     y_pred = model.predict(X_pred)
 
-    return {"prediction": y_pred[0]}
+    return {"prediction": round(float(y_pred[0]), 2)}
